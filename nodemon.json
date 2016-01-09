@@ -1,0 +1,16 @@
+{
+  "restartable": "rs",
+  "ignore": [
+    ".git",
+    "node_modules/**/node_modules",
+    "public/js/**/*",
+    "*.md"
+  ],
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "events": {
+    "restart": "npm run bundle-css"
+  },
+  "ext": "js json hbs sass scss"
+}

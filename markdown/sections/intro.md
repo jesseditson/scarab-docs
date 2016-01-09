@@ -1,0 +1,36 @@
+Intro
+---
+
+Scarab stands for "Social Code Application Runner And Builder".
+
+It is a command line tool and base node.js application used for creating and orchestrating applications with minimal boilerplate.
+
+It also provides an extendable architecture for reducing duplication and simplifying association of apps.
+
+Scarab has 5 main functions:
+
+1. Make starting a new project simple (via the `scarab init` command)
+2. Simplify the development environment and build scripts
+3. Emulate production environments on developer machines
+4. Handle authentication transparently so apps can assume they are always authenticated
+5. Make apps small containers of functionality that can be stacked together to create larger apps
+
+Under the hood, scarab leverages [express.js](http://expressjs.com/) for the frontend and authentication, and the [docker toolbox](https://www.docker.com/docker-toolbox) for orchestration and development environment management.
+
+There are 2 main components of scarab:
+
+1. The `scarab` command line tool
+
+The command line tool is what you use for development tasks like initializing apps, starting and stopping servers, and tailing logs.
+
+For the most part the scarab tool delegates the heavy lifting to [docker-compose](https://www.docker.com/docker-compose), which is what scarab uses to manage development apps. As such, every scarab app is Dockerized, and can be built to a binary and sent to a registry or deployed to a server without additional modification.
+
+There are some important differences between the scarab commands and docker-compose commands, primarily around how the `docker-compose.yml` file is parsed. These are detailed in the "[what scarab does differently than docker-compose](#what-scarab-does-differently-than-docker-compose)" section.
+
+2. The scarab base app
+
+All scarab apps include scarab as a dependency, and expose a simple express router. Your application does not need to be a node.js application however, and many apps will primarily use scarab as a proxy.
+
+The base scarab app automatically handles authenticating users, and passes bouncer tokens to child apps after it has handled authenticating the session. Because of this, all scarab apps can assume the existence of the `bouncer` cookie, and know that it will always contain a valid token.
+
+In addition, if your app uses an express router, the `req.user` property will be populated on all requests, so you perform authenticated requests to socialcode microservices easily.
