@@ -1,4 +1,22 @@
+var exphbs  = require('express-handlebars')
 var scarab = module.exports = require('scarab-spa')
+
+var fs = require('fs')
+var path = require('path')
+var sectionDir = path.join(__dirname, 'markdown', 'sections')
+
+var sections = scarab.locals.sections = fs.readdirSync(sectionDir)
+  .filter(f => /\.md$/.test(f))
+  .map(f => {
+    var name = f.replace(/\.md$/, '')
+    var title = name.replace(/^\d+\./, '')
+    var link = title.toLowerCase()
+    return {
+      name: name,
+      title: title.replace('-', ' '),
+      link: link
+    }
+  })
 
 /**
  * To attach a simple route to the application,
@@ -8,13 +26,11 @@ var scarab = module.exports = require('scarab-spa')
  * and can be treated exactly like one.
  */
 scarab.get('/', (req, res, next) => {
-  /**
-   * if your app requires authentication (it probably should),
-   * just skip requests that don't have a user. Authentication is handled upstream
-   * by the base scarab app.
-   */
-  if (!req.user) return next()
-  res.render('index')
+  res.render('index', {
+    helpers: {
+      section: name => 'sections/' + name
+    }
+  })
 })
 
 /**

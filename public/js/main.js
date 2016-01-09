@@ -1,8 +1,9 @@
-var request = require('superagent')
 
-request
-  .get('/api/resource')
-  .end((err, response) => {
-    if (err) return console.error('unable to contact api.', err)
-    console.log('successfully requested api.', response.body)
-  })
+// window.onload = function() {
+//   window.addEventListener('scroll', function() {
+//     let top = (window.pageYOffset || document.scrollTop) - (document.clientTop || 0)
+//     let nav = document.querySelector('navigation')
+//     nav.style.top = top + 'px'
+//     console.log(top)
+//   })
+// }

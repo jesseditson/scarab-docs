@@ -1,6 +1,45 @@
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,300);
 
+$sc-bg: #eef4f5;
+$sc-primary: #1a707f;
+
+a {
+  color: $sc-primary;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
 body {
-  margin: 40px;
   font-family: 'Open Sans', sans-serif;
+  display: flex;
+  flex-direction: row-reverse;
+  margin: 0px;
+}
+
+#main {
+  padding: 2rem;
+  margin-right: 20rem;
+}
+
+navigation {
+  border-left: 0.1rem $sc-primary solid;
+  padding: 2rem;
+  width: 15rem;
+  position: fixed;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  background-color: white;
+  ul {
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    li {
+      margin-bottom: 2rem;
+    }
+  }
 }

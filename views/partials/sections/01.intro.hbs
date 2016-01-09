@@ -2,7 +2,7 @@
 <p>Scarab stands for &quot;Social Code Application Runner And Builder&quot;.</p>
 <p>It is a command line tool and base node.js application used for creating and orchestrating applications with minimal boilerplate.</p>
 <p>It also provides an extendable architecture for reducing duplication and simplifying association of apps.</p>
-<p>Scarab has 5 main functions:</p>
+<p>Scarab has 5 core functions:</p>
 <ol>
 <li>Make starting a new project simple (via the <code>scarab init</code> command)</li>
 <li>Simplify the development environment and build scripts</li>
@@ -12,15 +12,11 @@
 </ol>
 <p>Under the hood, scarab leverages <a href="http://expressjs.com/">express.js</a> for the frontend and authentication, and the <a href="https://www.docker.com/docker-toolbox">docker toolbox</a> for orchestration and development environment management.</p>
 <p>There are 2 main components of scarab:</p>
-<ol>
-<li>The <code>scarab</code> command line tool</li>
-</ol>
+<h3 id="-the-scarab-command-line-tool">• The <code>scarab</code> command line tool</h3>
 <p>The command line tool is what you use for development tasks like initializing apps, starting and stopping servers, and tailing logs.</p>
 <p>For the most part the scarab tool delegates the heavy lifting to <a href="https://www.docker.com/docker-compose">docker-compose</a>, which is what scarab uses to manage development apps. As such, every scarab app is Dockerized, and can be built to a binary and sent to a registry or deployed to a server without additional modification.</p>
 <p>There are some important differences between the scarab commands and docker-compose commands, primarily around how the <code>docker-compose.yml</code> file is parsed. These are detailed in the &quot;<a href="#what-scarab-does-differently-than-docker-compose">what scarab does differently than docker-compose</a>&quot; section.</p>
-<ol>
-<li>The scarab base app</li>
-</ol>
+<h3 id="-the-scarab-base-app">• The scarab base app</h3>
 <p>All scarab apps include scarab as a dependency, and expose a simple express router. Your application does not need to be a node.js application however, and many apps will primarily use scarab as a proxy.</p>
 <p>The base scarab app automatically handles authenticating users, and passes bouncer tokens to child apps after it has handled authenticating the session. Because of this, all scarab apps can assume the existence of the <code>bouncer</code> cookie, and know that it will always contain a valid token.</p>
 <p>In addition, if your app uses an express router, the <code>req.user</code> property will be populated on all requests, so you perform authenticated requests to socialcode microservices easily.</p>
