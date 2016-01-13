@@ -1,6 +1,92 @@
 <h2 id="intro-to-docker">Intro to docker</h2>
+<h3 id="-intro-to-docker-concepts">• Intro to docker concepts</h3>
+<p>Docker is a powerful tool, and is worth learning fully - however, scarab abstracts much of the docker workflow for you, so that anyone working on a scarab app will use docker in the same way.</p>
+<p>Official documentation links:</p>
 <ul>
-<li>intro to docker concepts</li>
-<li>intro to docker-compose</li>
-<li>what scarab does differently than docker-compose (merged docker-compose files)</li>
+<li><a href="https://docs.docker.com/engine/reference/builder/">Dockerfile</a></li>
+<li><a href="https://docs.docker.com/engine/reference/commandline/cli/">docker cli</a></li>
+<li><a href="https://docs.docker.com/compose/compose-file/">docker-compose.yml</a></li>
+<li><a href="https://docs.docker.com/compose/reference/docker-compose/">docker-compose cli</a></li>
 </ul>
+<h4 id="dockerfile">Dockerfile</h4>
+<p>One piece that is important to us is the <code>Dockerfile</code>. The <code>Dockerfile</code> is used to tell docker everything we need to be installed before our application can be run in a completely new environment. Scarab apps all use the <code>node:wheezy</code> docker image as the base for our Dockerfiles.</p>
+<p>The <code>node:wheezy</code> is a premade debian wheezy image that includes the latest node. This means that <code>node</code> and <code>npm</code> will automatically be available to us, as well as some basic tools (like <code>curl</code>) that come with a wheezy base install.</p>
+<p>The initial Dockerfile used by scarab apps just creates a <code>/usr/src/app</code> folder, installs dependencies, and runs <code>npm start</code>.</p>
+<blockquote>
+<p>An important note is that we avoid installing dependencies that will be deployed separately, like databases or microservices. Instead of adding them as direct dependencies, we&#39;ll connect to them via TCP using the docker-compose <code>links</code> functionality (see below).</p>
+</blockquote>
+<h4 id="-docker-"><code>docker</code></h4>
+<p>The <code>docker</code> command is where most of the core <code>docker</code> functionality can be accessed. However, outside of the <code>docker images</code> command, it is rarely used directly when working with scarab.</p>
+<h3 id="-intro-to-docker-compose">• Intro to docker-compose</h3>
+<p><code>docker-compose</code> is an orchestration tool used by docker for linking multiple docker images together, and inheriting functionality from other docker images without creating a Dockerfile.</p>
+<p><code>scarab</code> uses docker-compose heavily to allow running microservices and extending the base scarab app.</p>
+<p><code>docker-compose</code> looks for a file called <code>docker-compose.yml</code>, which is a yaml file with basic overrides and directions for creating docker images.</p>
+<p>A basic docker-compose file looks something like this:</p>
+<pre><code class="lang-yaml"><span class="hljs-symbol">scarab:</span>
+<span class="hljs-symbol">  build:</span> .
+<span class="hljs-symbol">  env_file:</span> .env
+<span class="hljs-symbol">  command:</span> npm start
+</code></pre>
+<p>The above will build the Dockerfile in the current directory, and will set any variables in the <code>.env</code> file. It will also override the default <code>CMD</code> directive in the Dockerfile with the one specified in <code>command</code>. <code>docker-compose.yml</code> files are very powerful, but scarab also adds some functionality to them to allow us to do more than just orchestrate.</p>
+<h3 id="-what-scarab-does-differently-than-docker-compose">• what scarab does differently than docker-compose</h3>
+<p>scarab introduces the ability to merge docker-compose files to create a flat file. This means that your file may define as many apps as it likes, but the <code>scarab</code> field will be provided with defaults. These defaults are inherited recursively from parent apps, until the root scarab compose file is found.</p>
+<p>The root docker-compose file does most of the definition, and is defined as:</p>
+<pre><code class="lang-yaml"><span class="hljs-symbol">
+scarab:</span>
+<span class="hljs-symbol">  build:</span> .
+<span class="hljs-symbol">  volumes:</span>
+    - .:<span class="hljs-meta-keyword">/usr/</span>src/app
+<span class="hljs-symbol">  ports:</span>
+    - <span class="hljs-string">"80:3000"</span>
+<span class="hljs-symbol">  restart:</span> always
+<span class="hljs-symbol">  stdin_open:</span> true
+<span class="hljs-symbol">  tty:</span> true
+<span class="hljs-symbol">  domainname:</span> socialcode.dev
+<span class="hljs-symbol">  links:</span>
+    - redis
+<span class="hljs-symbol">  command:</span> node index.js
+<span class="hljs-symbol">redis:</span>
+<span class="hljs-symbol">  image:</span> redis:latest
+<span class="hljs-symbol">  ports:</span>
+    - <span class="hljs-string">"6379:6379"</span>
+</code></pre>
+<p>A child scarab app could then define it&#39;s scarab process as:</p>
+<pre><code class="lang-yaml"><span class="hljs-symbol">
+scarab:</span>
+<span class="hljs-symbol">  command:</span> npm run server
+<span class="hljs-symbol">  links:</span>
+    - microservice
+<span class="hljs-symbol">microservice:</span>
+<span class="hljs-symbol">  image:</span> socialcode/microservice
+<span class="hljs-symbol">  ports:</span>
+    - <span class="hljs-string">"8080:8080"</span>
+</code></pre>
+<p>When running <code>scarab build</code>, <code>scarab start</code>, <code>scarab stop</code>, <code>scarab logs</code>, or <code>scarab compose &lt;command&gt;</code>, the <code>docker-compose.yml</code> file that would be used in the above case would look like this:</p>
+<pre><code class="lang-yaml"><span class="hljs-symbol">
+scarab:</span>
+<span class="hljs-symbol">  build:</span> .
+<span class="hljs-symbol">  volumes:</span>
+    - .:<span class="hljs-meta-keyword">/usr/</span>src/app
+<span class="hljs-symbol">  ports:</span>
+    - <span class="hljs-string">"80:3000"</span>
+<span class="hljs-symbol">  restart:</span> always
+<span class="hljs-symbol">  stdin_open:</span> true
+<span class="hljs-symbol">  tty:</span> true
+<span class="hljs-symbol">  domainname:</span> socialcode.dev
+<span class="hljs-symbol">  links:</span>
+    - redis
+    - microservice
+<span class="hljs-symbol">  command:</span> npm run server
+<span class="hljs-symbol">redis:</span>
+<span class="hljs-symbol">  image:</span> redis:latest
+<span class="hljs-symbol">  ports:</span>
+    - <span class="hljs-string">"6379:6379"</span>
+<span class="hljs-symbol">microservice:</span>
+<span class="hljs-symbol">  image:</span> socialcode/microservice
+<span class="hljs-symbol">  ports:</span>
+    - <span class="hljs-string">"8080:8080"</span>
+</code></pre>
+<p>This allows us to extend docker-compose files with <code>links</code>, something that is not supported by docker-compose out of the box, but integral to allowing scarab apps to be composeable and modular entities.</p>
+<blockquote>
+<p>Because of this, you should never use <code>docker-compose</code> directly with scarab apps. Instead, use <code>scarab compose</code> with the same arguments as you would pass to <code>docker-compose</code>.</p>
+</blockquote>

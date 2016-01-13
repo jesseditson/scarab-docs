@@ -1,5 +1,21 @@
 <h2 id="setting-up-your-development-environment">Setting up your development environment</h2>
-<ul>
-<li>installing scarab</li>
-<li>docker-machine concepts</li>
-</ul>
+<p><em>note: at the time of writing, scarab assumes you&#39;re working on a mac, and has only been tested in a bash shell. If you&#39;re using a different shell and experience issues, please report them in the issues.</em></p>
+<h3 id="-installing-the-docker-toolbox">• Installing the docker toolbox</h3>
+<p>Docker has a Mac installer for getting you set up automatically. Download it here: <a href="https://www.docker.com/docker-toolbox">https://www.docker.com/docker-toolbox</a></p>
+<p>When you get to the &quot;quick start&quot; section, feel free to skip to the end without opening kitematic or the quickstart terminal. You will not need either of these tools to work with scarab.</p>
+<h3 id="-installing-scarab">• Installing scarab</h3>
+<p>Scarab is developed against the latest node.js (at time of writing, 5.3) and npm (3.3.12), but should work with any iojs based version of node (generally, 4.0 and higher, with the associated <code>npm</code>).</p>
+<p>Verify your node &amp; npm versions, then run <code>npm install -g jesseditson/scarab</code> - this will make the <code>scarab</code> command line tool available. For convenience, you may use <code>sc</code> instead of <code>scarab</code> in any of the commands.</p>
+<h3 id="-docker-machine-concepts">• Docker-machine concepts</h3>
+<p>Because scarab relies so heavily on docker-machines, it helps to understand a bit about how they work.</p>
+<p>Locally, <code>docker-machine</code> manages VMs that run docker for you, and has some helpful commands for managing them. It can also connect to remote machines and perform the same tasks as you would locally. This means deploying to a staging server is exactly the same process as starting a dev server.</p>
+<blockquote>
+<p>On Mac, <code>docker-machine</code> uses VirtualBox as the hypervisor responsible for your docker VM. This means that the VM is restricted to the same rules as VirtualBox machines with regards to file sharing. As a general rule, this means that you <em>cannot</em> access a folder that is not a child of a mounted folder.
+This is not an issue for most cases, but is worth noting because this means you cannot use locally <code>npm link</code>ed modules, as symlinks cannot be followed outside of the current folder.</p>
+</blockquote>
+<p><code>scarab</code> does not use your default docker machine, so that you can develop other applications without crossing wires with the scarab created images. Instead, it creates a docker machine called <code>socialcode</code>, where it will deploy the current scarab app.</p>
+<p>To see all your provisioned docker machines, run <code>docker-machine ls</code> - this will show a list of the machines and their names. In your case, you&#39;ll likely either have 1 machine, <code>default</code>, or 2 machines, <code>default</code> and <code>socialcode</code>.</p>
+<p><code>scarab</code> attempts to create the socialcode machine lazily if it doesn&#39;t exist. If you don&#39;t see the machine, run <code>scarab env</code>. Scarab should set up a new machine and print it&#39;s env. If you wanted to point your local <code>docker</code> command at the <code>socialcode</code> machine, you can run <code>eval $(scarab env)</code>. Until you close this shell, it will run any <code>docker</code> commands against the <code>socialcode</code> machine.</p>
+<h3 id="-hosts">• Hosts</h3>
+<p>To simplify development, <code>scarab</code> provides a <code>scarab hosts</code> command - this will automatically create an entry in your <code>/etc/hosts</code> file for the docker machine, pointed to <a href="http://socialcode.dev">http://socialcode.dev</a>.</p>
+<p>Because scarab defaults to using port 80 on the docker machine, any time you <code>scarab start</code> an app, it will be available at <a href="http://socialcode.dev">http://socialcode.dev</a> in your browser.</p>

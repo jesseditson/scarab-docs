@@ -21,25 +21,55 @@ body {
 }
 
 #main {
+  margin: 0px;
   padding: 2rem;
-  margin-right: 20rem;
+  transition: margin-left 200ms;
 }
 
 navigation {
-  border-left: 0.1rem $sc-primary solid;
-  padding: 2rem;
-  width: 15rem;
-  position: fixed;
+  width: 10rem;
+  transition: width 200ms;
+  border-left: 0.1rem rgba($sc-primary, 0.4) solid;
+  position: relative;
   right: 0px;
   top: 0px;
   bottom: 0px;
   background-color: white;
+  overflow: hidden;
   ul {
+    width: 25rem;
+    position: relative;
     padding: 0;
     margin: 0;
     list-style-type: none;
     li {
-      margin-bottom: 2rem;
+      padding: 0px 2rem;
+      line-height: 4rem;
+      &:nth-child(even) {
+        background-color: #F2FDFF;
+      }
+      border-bottom: 0.1rem solid rgba(0,0,0,0.1);
     }
   }
+}
+
+navigation .image img {
+  margin-top: 2rem;
+  width: 5rem;
+}
+
+.nav-open {
+  #main {
+    margin-left: -20rem;
+  }
+  navigation {
+    width: 50rem;
+  }
+}
+
+blockquote {
+  background-color: rgba(0,0,0,0.1);
+  border-radius: 2rem;
+  margin: 2rem;
+  padding: 1rem 2rem;
 }

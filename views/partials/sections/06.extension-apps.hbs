@@ -1,0 +1,44 @@
+<h2 id="scarab-extension-apps">Scarab extension apps</h2>
+<p>Because every scarab app both inherits and exposes a scarab app, apps can have inheritance chains. This allows you to focus on building your application with a very small scope, and delegating common functionality or toolchain bootstrapping to a parent app.</p>
+<p>For example, many apps built with scarab will be single page apps, given that our microservices are friendly to them. Instead of inheriting from <code>scarab</code> directly, these apps can inherit from <code>scarab-spa</code>, which includes the authentication layer from scarab, but also adds the following:</p>
+<ul>
+<li>a lightweight JSON API for aggregation/communication between the client and external services</li>
+<li>browserify with babel for client side javascript compilation and module resolution</li>
+<li>automatic server restarts on changes via nodemon</li>
+<li>app-specific views and assets directories</li>
+</ul>
+<p>Instead of re-creating architecture every time you create a single page app, you can init from this scarab app, and focus on the functionality of your application.</p>
+<p>Because this architecture is recursive, you could create a scarab-react extension app that added boilerplate and/or best practices to scarab-spa, and further abstract common functionality for future react-based single page apps.</p>
+<h3 id="-creating-an-extension-app">• Creating an extension app</h3>
+<p>Extension apps are just scarab apps, so you would init a new app, and modify it to perform the functionality you expect.</p>
+<p>The only thing scarab needs to know that an app can be extended is a package.json entry called <code>scarab</code> - this allows you to specify what files should be templated over, define sub-app dependencies, and template in common package.json fields.</p>
+<p>To make your app an extension app, add a <code>scarab</code> field to package.json - the value should be an object, which can contain the following properties:</p>
+<ul>
+<li><code>base</code>: the npm-compatible package name (can be a git repo) of the scarab app this app is based on</li>
+<li><code>copy</code>: An array of files that should be copied to the root directory of the sub-app</li>
+<li><code>package</code>: Any default package.json fields that sub-apps should contain. For instance, you can define <code>dependencies</code> or <code>devDependencies</code> inside this field.</li>
+</ul>
+<p>For example:</p>
+<pre><code class="lang-json">
+{
+  <span class="hljs-string">"name"</span>: <span class="hljs-string">"my-extension-app"</span>,
+  // normal package.json stuff
+  <span class="hljs-string">"scarab"</span>: {
+    <span class="hljs-string">"base"</span>: <span class="hljs-string">"jesseditson/scarab-spa"</span>,
+    <span class="hljs-string">"copy"</span>: [
+      <span class="hljs-string">"docker-compose.yml"</span>,
+      <span class="hljs-string">"nodemon.json"</span>,
+      <span class="hljs-string">"Dockerfile"</span>,
+    ],
+    <span class="hljs-string">"package"</span>: {
+      <span class="hljs-string">"scripts"</span>: {
+        <span class="hljs-string">"start"</span>: <span class="hljs-string">"nodemon -L index"</span>,
+      },
+      <span class="hljs-string">"devDependencies"</span>: {
+        <span class="hljs-string">"nodemon"</span>: <span class="hljs-string">"^1.8.1"</span>
+      }
+    }
+  }
+}
+</code></pre>
+<p>The above would copy the local docker-compose.yml, nodemon.json, and Dockerfile when initializing, and add a default start script and dev dependency to the sub-app.</p>

@@ -1,4 +1,43 @@
 <h2 id="the-scarab-stack">The Scarab stack</h2>
-<ul>
-<li>show a typical application, including client and where things go</li>
-</ul>
+<p>Scarab apps are composeable stacks of applications that inherit their super app&#39;s router and add routes.</p>
+<p>This lets us create scarab apps that can be mounted inside other scarab apps, or run directly. This modularity lets us create complicated architecture while keeping application code small and modular.</p>
+<p>Because express makes it easy to create streaming proxies, scarab apps can also be run in parallel and exposed either via routes or ports, and linked using the docker-compose links field.</p>
+<p>A typical scarab app would look like this:</p>
+<p><img src="http://oi.pxfx.io/1O2P2e0m2W2O/Image%202016-01-13%20at%2012.04.25%20PM.png" alt="stack"></p>
+<p>The <code>scarab</code> container runs a <code>scarab</code> application, with your application&#39;s express router mounted inside of it.</p>
+<p><code>scarab</code> is linked to a separate redis container, which it uses for session control.</p>
+<p>Your router would then be automatically authenticated, and can communicate with a linked microservice via tcp, running in a separate container.</p>
+<p>Here&#39;s how a request flows through this architecture:</p>
+<p><img src="http://oi.pxfx.io/1R322c0P1E2f/Image%202016-01-13%20at%2012.15.40%20PM.png" alt="Request flow"></p>
+<p>When a user connects to this app, the request is first authenticated by <code>scarab</code>, and redirected to a login page if needed.</p>
+<p>Scarab sets a <code>bouncer</code> cookie on the request, which is passed to your app. In this example, the app could even be a proxy, pointed to a local django or other application. As long as your app uses cookies to authenticate, you can use scarab as a simple proxy and you will always have a <code>bouncer</code> cookie set on every request you receive.</p>
+<p>Here&#39;s another example of a larger application:</p>
+<p><img src="http://oi.pxfx.io/1O10251m1C2c/Image%202016-01-13%20at%2012.14.16%20PM.png" alt="Large app"></p>
+<p>In this case, the request is still authenticated by scarab, but our application exposes some express routes.</p>
+<p>At the root, it can serve content directly from our app, via express views. We can either use an express Router, or create an entire express application. As long as the <code>module.exports</code> of <code>index.js</code> is an express app or router, it will be mounted by scarab.</p>
+<p>under <code>/npm-app</code>, we can serve our own npm module, as long as it acts like connect middleware (in that it handles a req and res) - we&#39;d just use express&#39;s <code>app.use(&#39;/npm-app&#39;, require(&#39;npm-app&#39;))</code> to send it requests directly without a proxy.</p>
+<p>If we want to serve a linked app, we could create a simple proxy to send authenticated requests to a host and port defined by docker compose by manually creating a simple proxy:</p>
+<p>If our <code>docker-compose.yml</code> looks like this:</p>
+<pre><code class="lang-yaml"><span class="hljs-symbol">
+scarab:</span>
+<span class="hljs-symbol">  links:</span>
+    - app
+<span class="hljs-symbol">app:</span>
+<span class="hljs-symbol">  image:</span> socialcode/simpleapp
+<span class="hljs-symbol">  ports:</span>
+    - <span class="hljs-string">"8080:8080"</span>
+</code></pre>
+<p>Our proxy could look like this:</p>
+<pre><code class="lang-javascript">
+scarab.<span class="hljs-keyword">use</span>(<span class="hljs-string">'/app'</span>, (req, res, next) =&gt; {
+  <span class="hljs-keyword">if</span> (!req.user) <span class="hljs-keyword">return</span> next()
+  <span class="hljs-keyword">var</span> url = <span class="hljs-string">'http://'</span> + APP_1_PORT_8080_TCP_ADDR + <span class="hljs-string">':'</span> + APP_1_PORT_8080_TCP_PORT + req.url
+  <span class="hljs-keyword">var</span> j = request.jar()
+  Object.keys(req.cookies).<span class="hljs-keyword">forEach</span>(k =&gt; {
+    <span class="hljs-keyword">var</span> c = req.cookies[k]
+    j.setCookie(k, c)
+  })
+  req.pipe(request({ url: url, jar: j })).pipe(res)
+})
+</code></pre>
+<p>If we then requested <code>/app/my/url</code>, the request would be forwarded to the <code>app</code> service, with the url <code>/my/url</code>.</p>

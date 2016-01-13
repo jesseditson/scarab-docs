@@ -1,6 +1,54 @@
 <h2 id="scarab-routing">Scarab routing</h2>
+<h3 id="-express-routing-middleware-concepts">• Express routing/middleware concepts</h3>
+<p>Express is a simple webserver written in node.js, which is built around the concept of &quot;middleware&quot;.</p>
+<p>When a request is received, express will run the request through a chain of middleware until one of them does not pass to the next.</p>
+<p>Each middleware receives 3 arguments:</p>
 <ul>
-<li>Express routing/middleware concepts</li>
-<li>Adding middleware</li>
-<li>Self contained apps</li>
+<li><code>req</code>: an object containing information about the request</li>
+<li><code>res</code>: an object containing information and exposing mutating functions that you can use to respond to the request</li>
+<li><code>next</code>: a function that you may call to indicate that you would like to pass this request to the next handler.</li>
 </ul>
+<p>When you call <code>require(&#39;scarab&#39;)</code>, the returned object is a preconfigured express app.</p>
+<p>You can add a simple GET response by calling <code>scarab.get()</code>:</p>
+<pre><code class="lang-javascript">
+scarab.get(<span class="hljs-string">'/send-json'</span>, <span class="hljs-function"><span class="hljs-params">(req, res, next)</span> =&gt;</span> {
+  res.json({ success: <span class="hljs-literal">true</span> })
+})
+</code></pre>
+<p>You may add middleware without an HTTP verb by using the <code>.all</code> or <code>.use</code> methods:</p>
+<pre><code class="lang-javascript">
+<span class="hljs-comment">// .all, which requires a route, and is an exact match:</span>
+scarab.all(<span class="hljs-string">'/foo'</span>, (req, res, next) =&gt; {
+  <span class="hljs-comment">// this will only respond to /foo (not /foo/bar)</span>
+  res.render(<span class="hljs-string">'index'</span>, { foo: <span class="hljs-keyword">true</span> })
+})
+
+<span class="hljs-comment">// .use with a route, which will match anything _beginning_ with your route:</span>
+scarab.<span class="hljs-keyword">use</span>(<span class="hljs-string">'/hello'</span>, (req, res, next) =&gt; {
+  <span class="hljs-comment">// this will respond to /hello, /hello/there, /hello/post/12/comments, etc.</span>
+  res.send(<span class="hljs-string">'hello'</span>)
+})
+
+<span class="hljs-comment">// .use without a route, will match _all_ requests</span>
+scarab.<span class="hljs-keyword">use</span>((req, res, next) =&gt; {
+  req.middlewareMessage = <span class="hljs-string">'hello from middleware'</span>
+  <span class="hljs-comment">// this will just pass to the next middleware.</span>
+  next()
+})
+</code></pre>
+<p>Express provides lots of helpful response methods and request parsing. For more details, look at the <a href="http://expressjs.com/en/4x/api.html">express documentation</a></p>
+<h3 id="-self-contained-apps">• Self contained apps</h3>
+<p>In many cases, you&#39;ll want your app to use templates or may want to do custom express configuration. If your app is only overriding values, you could just manipulate the <code>scarab</code> app, but in some cases you may want to create your own express app, so you can do things like define custom templating engines without breaking the packaged scarab engine.</p>
+<p>Thankfully, express can mount an express app as if it were a route - so you can create your app like so:</p>
+<pre><code class="lang-javascript">
+<span class="hljs-selector-tag">var</span> scarab = module<span class="hljs-selector-class">.exports</span> = require(<span class="hljs-string">'scarab'</span>)
+<span class="hljs-selector-tag">var</span> express = require(<span class="hljs-string">'express'</span>)
+<span class="hljs-selector-tag">var</span> app = express()
+
+<span class="hljs-comment">/**
+ * Your custom config would go here
+ */</span>
+
+scarab.use(<span class="hljs-string">'/'</span>, app)
+</code></pre>
+<p>All root requests will now go to app after they have successfully authenticated with scarab.</p>

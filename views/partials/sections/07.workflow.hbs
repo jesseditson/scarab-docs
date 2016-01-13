@@ -1,0 +1,27 @@
+<h2 id="development-workflow">Development workflow</h2>
+<h3 id="-init-"><code>init</code></h3>
+<p>Scarab includes a command called <code>init</code>, which handles resolving your parent app and setting up an initial project.</p>
+<p><code>init</code> takes a single optional argument, which is the npm-compatible package name of the scarab app you would like to extend.</p>
+<p>For instance, to set up a single page app, you would use:</p>
+<pre><code class="lang-bash">
+<span class="hljs-keyword">scarab </span>init <span class="hljs-keyword">jesseditson/scarab-spa</span>
+</code></pre>
+<p>This will initialize a basic single page app. Here&#39;s a screen recording of that process:</p>
+<p><img src="https://camo.githubusercontent.com/41729ab6fa4d8b7a723756d6786c12a06dfccd52/687474703a2f2f6f692e707866782e696f2f317231773343306b325030392f7363617261622d6578616d706c652d3830302e676966" alt="init spa"></p>
+<p>(a large version of the above can be viewed <a href="http://f.cl.ly/items/0x1f1r3D2m0g0K0X0W0u/Screen%20Recording%202015-12-18%20at%2001.10%20PM.gif">here</a>)</p>
+<h3 id="-start-"><code>start</code></h3>
+<p>Once you have your application set up, run <code>scarab start</code> to start the application. This will start the application in daemonized mode, which means you won&#39;t see any console output, but your app will be available at <a href="http://socialcode.dev">http://socialcode.dev</a> (assuming you have run <code>scarab hosts</code>).</p>
+<h3 id="-stop-"><code>stop</code></h3>
+<p>You can stop your application by running <code>scarab stop</code>. If you&#39;re unsure if your app is running, you can either just run <code>stop</code>, or run <code>scarab compose ps</code> to see what services are running on the <code>socialcode</code> docker machine.</p>
+<h3 id="-logs-"><code>logs</code></h3>
+<p>While your app is running, you can tail the logs by running <code>scarab logs</code>.</p>
+<blockquote>
+<p>Note that docker sometimes disconnects with the message:</p>
+<pre><code>ERROR: Couldn<span class="hljs-symbol">'t</span> connect <span class="hljs-keyword">to</span> Docker daemon - you might need <span class="hljs-keyword">to</span> run `docker-machine start <span class="hljs-keyword">default</span>`.
+</code></pre><p>This unfortunately is a known issue with docker, and prevents us from running apps in the foreground. Once docker-compose has resolved this issue, these docs will be updated.
+When you encounter this, you can just restart logging by running <code>scarab logs</code>.</p>
+</blockquote>
+<h3 id="-cleanup-"><code>cleanup</code></h3>
+<p>Docker leaves lots of artifacts on the VM when building apps. It&#39;s a good idea to clean these up occasionally, and so <code>scarab</code> comes with a command that removes unused artifacts, <code>scarab clean</code>. If you run in to odd behavior when starting images, it&#39;s possible that you&#39;re running low on VM space, so this command combined with <code>docker-machine restart socialcode</code> will usually resolve most issues.</p>
+<h3 id="-compose-"><code>compose</code></h3>
+<p><code>docker-compose</code> has a multitude of other commands that you can use to inspect or manipulate your services. Because of the way docker-compose.yml files are inherited by scarab apps, you&#39;ll use <code>scarab compose</code> instead of <code>docker-compose</code> whenever performing a compose command.</p>
