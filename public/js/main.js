@@ -1,6 +1,6 @@
 
 window.onload = function() {
-  window.addEventListener('scroll', requestTick, false)
+  // window.addEventListener('scroll', requestTick, false)
 
   var nav = document.querySelector('navigation')
   var body = document.querySelector('body')

@@ -15,22 +15,23 @@ a:hover {
 
 body {
   font-family: 'Open Sans', sans-serif;
-  display: flex;
-  flex-direction: row-reverse;
   margin: 0px;
 }
 
 #main {
   margin: 0px;
   padding: 2rem;
-  transition: margin-left 200ms;
+  transition: transform 200ms;
+
+  img {
+    max-width: 100%;
+  }
 }
 
 navigation {
-  width: 10rem;
   transition: width 200ms;
   border-left: 0.1rem rgba($sc-primary, 0.4) solid;
-  position: relative;
+  position: fixed;
   right: 0px;
   top: 0px;
   bottom: 0px;
@@ -58,18 +59,35 @@ navigation .image img {
   width: 5rem;
 }
 
-.nav-open {
-  #main {
-    margin-left: -20rem;
-  }
-  navigation {
-    width: 50rem;
-  }
-}
-
 blockquote {
   background-color: rgba(0,0,0,0.1);
   border-radius: 2rem;
   margin: 2rem;
   padding: 1rem 2rem;
+}
+
+@media (max-width: 768px) {
+  #main {
+    margin-right: 5rem;
+  }
+  navigation {
+    width: 3rem;
+  }
+  .nav-open {
+    #main {
+      transform: translateX(-17.5rem);
+    }
+    navigation {
+      width: 17.5rem;
+    }
+  }
+}
+
+@media (min-width: 768px) {
+  #main {
+    margin-right: 17.5rem;
+  }
+  navigation {
+    width: 17.5rem;
+  }
 }
