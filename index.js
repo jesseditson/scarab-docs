@@ -1,25 +1,11 @@
 var exphbs  = require('express-handlebars')
 var express = require('express')
 var scarab = module.exports = require('scarab-spa')
+var sections = require('./lib/sections')
 
-var fs = require('fs')
-var path = require('path')
-var sectionDir = path.join(__dirname, 'markdown', 'sections')
-
-var sections = scarab.locals.sections = fs.readdirSync(sectionDir)
-  .filter(f => /\.md$/.test(f))
-  .map(f => {
-    var name = f.replace(/\.md$/, '')
-    var title = name.replace(/^\d+\./, '')
-    var link = title.toLowerCase()
-    return {
-      name: name,
-      title: title.replace('-', ' '),
-      link: link
-    }
-  })
-
-scarab.use('/', express.static(__dirname + '/node_modules'))
+for (var l in sections.locals) {
+  scarab.locals[l] = sections.locals[l]
+}
 
 /**
  * To attach a simple route to the application,
@@ -30,9 +16,7 @@ scarab.use('/', express.static(__dirname + '/node_modules'))
  */
 scarab.get('/', (req, res, next) => {
   res.render('index', {
-    helpers: {
-      section: name => 'sections/' + name
-    }
+    helpers: sections.helpers
   })
 })
 
