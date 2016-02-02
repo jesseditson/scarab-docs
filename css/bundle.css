@@ -1,0 +1,135 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,600,700,300);
+/* Tomorrow Night Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+  color: #969896; }
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+  color: #cc6666; }
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+  color: #de935f; }
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+  color: #f0c674; }
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+  color: #b5bd68; }
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+  color: #81a2be; }
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+  color: #b294bb; }
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  background: #1d1f21;
+  color: #c5c8c6;
+  padding: 0.5em; }
+
+.hljs-emphasis {
+  font-style: italic; }
+
+.hljs-strong {
+  font-weight: bold; }
+
+code {
+  font-size: 1.2em; }
+
+a {
+  color: #1a707f;
+  font-weight: bold;
+  text-decoration: none; }
+
+a:hover {
+  text-decoration: underline; }
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  margin: 0px; }
+
+#main {
+  margin: 0px;
+  padding: 2rem;
+  transition: transform 200ms; }
+  #main img {
+    max-width: 100%; }
+
+navigation {
+  transition: width 200ms;
+  border-left: 0.1rem rgba(26, 112, 127, 0.4) solid;
+  position: fixed;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  background-color: white;
+  overflow: hidden; }
+  navigation ul {
+    width: 25rem;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    list-style-type: none; }
+    navigation ul li {
+      padding: 0px 2rem;
+      line-height: 4rem;
+      border-bottom: 0.1rem solid rgba(0, 0, 0, 0.1); }
+      navigation ul li:nth-child(even) {
+        background-color: #F2FDFF; }
+
+navigation .image img {
+  margin-top: 2rem;
+  width: 5rem; }
+
+blockquote {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 2rem;
+  margin: 2rem;
+  padding: 1rem 2rem; }
+
+@media (max-width: 768px) {
+  #main {
+    margin-right: 5rem; }
+  navigation {
+    width: 3rem; }
+  .nav-open #main {
+    transform: translateX(-17.5rem); }
+  .nav-open navigation {
+    width: 17.5rem; } }
+
+@media (min-width: 768px) {
+  #main {
+    margin-right: 17.5rem; }
+  navigation {
+    width: 17.5rem; } }

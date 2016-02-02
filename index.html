@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>scarab documentation</title>
+  <link rel="stylesheet" href="css/bundle.css"/>
+</head>
+<body>
+  <navigation>
+    <ul class="nav-list">
+      <li class="image">
+        <img src="https://camo.githubusercontent.com/b5ca0d14120a2b5bec61bd89b976d44e6ea600fd/687474703a2f2f6f692e707866782e696f2f3273324a30333331317233392f7363617261622d6c6f676f2e706e67"/>
+      </li>
+        <li>
+          <a href="#intro">intro</a>
+        </li>
+        <li>
+          <a href="#development-environment">development environment</a>
+        </li>
+        <li>
+          <a href="#docker">docker</a>
+        </li>
+        <li>
+          <a href="#scarab-stack">scarab stack</a>
+        </li>
+        <li>
+          <a href="#routing">routing</a>
+        </li>
+        <li>
+          <a href="#extension-apps">extension apps</a>
+        </li>
+        <li>
+          <a href="#workflow">workflow</a>
+        </li>
+    </ul>
+  </navigation>
+  <div class="container" id="main">
+    <h1>Scarab Documentation</h1>
+    
+  <section id="intro">
+    <h2 id="intro">Intro</h2>
+    <p>Scarab stands for &quot;Social Code Application Runner And Builder&quot;.</p>
+    <p>It is a command line tool and base node.js application used for creating and orchestrating applications with minimal boilerplate.</p>
+    <p>It also provides an extendable architecture for reducing duplication and simplifying association of apps.</p>
+    <p>Scarab has 5 core functions:</p>
+    <ol>
+    <li>Make starting a new project simple (via the <code>scarab init</code> command)</li>
+    <li>Simplify the development environment and build scripts</li>
+    <li>Emulate production environments on developer machines</li>
+    <li>Handle authentication transparently so apps can assume they are always authenticated</li>
+    <li>Make apps small containers of functionality that can be stacked together to create larger apps</li>
+    </ol>
+    <p>Under the hood, scarab leverages <a href="http://expressjs.com/">express.js</a> for the frontend and authentication, and the <a href="https://www.docker.com/docker-toolbox">docker toolbox</a> for orchestration and development environment management.</p>
+    <p>There are 2 main components of scarab:</p>
+    <h3 id="-the-scarab-command-line-tool">• The <code>scarab</code> command line tool</h3>
+    <p>The command line tool is what you use for development tasks like initializing apps, starting and stopping servers, and tailing logs.</p>
+    <p>For the most part the scarab tool delegates the heavy lifting to <a href="https://www.docker.com/docker-compose">docker-compose</a>, which is what scarab uses to manage development apps. As such, every scarab app is Dockerized, and can be built to a binary and sent to a registry or deployed to a server without additional modification.</p>
+    <p>There are some important differences between the scarab commands and docker-compose commands, primarily around how the <code>docker-compose.yml</code> file is parsed. These are detailed in the &quot;<a href="#what-scarab-does-differently-than-docker-compose">what scarab does differently than docker-compose</a>&quot; section.</p>
+    <h3 id="-the-scarab-base-app">• The scarab base app</h3>
+    <p>All scarab apps include scarab as a dependency, and expose a simple express router. Your application does not need to be a node.js application, and many apps will primarily use scarab as a proxy.</p>
+    <p>The base scarab app automatically handles authenticating users, and passes bouncer tokens to child apps after it has handled authenticating the session. Because of this, all scarab apps can assume the existence of the <code>bouncer</code> cookie, and know that it will always contain a valid token.</p>
+    <p>In addition, if your app uses an express router, the <code>req.user</code> property will be populated on all requests, so you can build views with user information on the server side.</p>
+  </section>
+  <hr/>
+  <br/>
+  <br/>
+  <section id="development-environment">
+    <h2 id="setting-up-your-development-environment">Setting up your development environment</h2>
+    <p><em>note: at the time of writing, scarab assumes you&#39;re working on a mac, and has only been tested in a bash shell. If you&#39;re using a different shell and experience issues, please report them in the issues.</em></p>
+    <h3 id="-installing-the-docker-toolbox">• Installing the docker toolbox</h3>
+    <p>Docker has a Mac installer for getting you set up automatically. Download it here: <a href="https://www.docker.com/docker-toolbox">https://www.docker.com/docker-toolbox</a></p>
+    <p>When you get to the &quot;quick start&quot; section, feel free to skip to the end without opening kitematic or the quickstart terminal. You will not need either of these tools to work with scarab.</p>
+    <h3 id="-installing-scarab">• Installing scarab</h3>
+    <p>Scarab is developed against the latest node.js (at time of writing, 5.3) and npm (3.3.12), but should work with any iojs based version of node (generally, 4.0 and higher, with the associated <code>npm</code>).</p>
+    <p>Verify your node &amp; npm versions, then run <code>npm install -g jesseditson/scarab</code> - this will make the <code>scarab</code> command line tool available. For convenience, you may use <code>sc</code> instead of <code>scarab</code> in any of the commands.</p>
+    <h3 id="-docker-machine-concepts">• Docker-machine concepts</h3>
+    <p>Because scarab relies so heavily on docker-machines, it helps to understand a bit about how they work.</p>
+    <p>Locally, <code>docker-machine</code> manages VMs that run docker for you, and has some helpful commands for managing them. It can also connect to remote machines and perform the same tasks as you would locally. This means deploying to a staging server is exactly the same process as starting a dev server.</p>
+    <blockquote>
+    <p>On Mac, <code>docker-machine</code> uses VirtualBox as the hypervisor responsible for your docker VM. This means that the VM is restricted to the same rules as VirtualBox machines with regards to file sharing. As a general rule, this means that you <em>cannot</em> access a folder that is not a child of a mounted folder.
+    This is not an issue for most cases, but is worth noting because this means you cannot use locally <code>npm link</code>ed modules, as symlinks cannot be followed outside of the current folder.</p>
+    </blockquote>
+    <p><code>scarab</code> does not use your default docker machine, so that you can develop other applications without crossing wires with the scarab created images. Instead, it creates a docker machine called <code>socialcode</code>, where it will deploy the current scarab app.</p>
+    <p>To see all your provisioned docker machines, run <code>docker-machine ls</code> - this will show a list of the machines and their names. In your case, you&#39;ll likely either have 1 machine, <code>default</code>, or 2 machines, <code>default</code> and <code>socialcode</code>.</p>
+    <p><code>scarab</code> attempts to create the socialcode machine lazily if it doesn&#39;t exist. If you don&#39;t see the machine, run <code>scarab env</code>. Scarab should set up a new machine and print it&#39;s env. If you wanted to point your local <code>docker</code> command at the <code>socialcode</code> machine, you can run <code>eval $(scarab env)</code>. Until you close this shell, it will run any <code>docker</code> commands against the <code>socialcode</code> machine.</p>
+    <h3 id="-hosts">• Hosts</h3>
+    <p>To simplify development, <code>scarab</code> provides a <code>scarab hosts</code> command - this will automatically create an entry in your <code>/etc/hosts</code> file for the docker machine, pointed to <a href="http://socialcode.dev">http://socialcode.dev</a>.</p>
+    <p>Because scarab defaults to using port 80 on the docker machine, any time you <code>scarab start</code> an app, it will be available at <a href="http://socialcode.dev">http://socialcode.dev</a> in your browser.</p>
+  </section>
+  <hr/>
+  <br/>
+  <br/>
+  <section id="docker">
+    <h2 id="intro-to-docker">Intro to docker</h2>
+    <h3 id="-intro-to-docker-concepts">• Intro to docker concepts</h3>
+    <p>Docker is a powerful tool, and is worth learning fully - however, scarab abstracts much of the docker workflow for you, so that anyone working on a scarab app will use docker in the same way.</p>
+    <p>Official documentation links:</p>
+    <ul>
+    <li><a href="https://docs.docker.com/engine/reference/builder/">Dockerfile</a></li>
+    <li><a href="https://docs.docker.com/engine/reference/commandline/cli/">docker cli</a></li>
+    <li><a href="https://docs.docker.com/compose/compose-file/">docker-compose.yml</a></li>
+    <li><a href="https://docs.docker.com/compose/reference/docker-compose/">docker-compose cli</a></li>
+    </ul>
+    <h4 id="dockerfile">Dockerfile</h4>
+    <p>One piece that is important to us is the <code>Dockerfile</code>. The <code>Dockerfile</code> is used to tell docker everything we need to be installed before our application can be run in a completely new environment. Scarab apps all use the <code>node:wheezy</code> docker image as the base for our Dockerfiles.</p>
+    <p>The <code>node:wheezy</code> is a premade debian wheezy image that includes the latest node. This means that <code>node</code> and <code>npm</code> will automatically be available to us, as well as some basic tools (like <code>curl</code>) that come with a wheezy base install.</p>
+    <p>The initial Dockerfile used by scarab apps just creates a <code>/usr/src/app</code> folder, installs dependencies, and runs <code>npm start</code>.</p>
+    <blockquote>
+    <p>An important note is that we avoid installing dependencies that will be deployed separately, like databases or microservices. Instead of adding them as direct dependencies, we&#39;ll connect to them via TCP using the docker-compose <code>links</code> functionality (see below).</p>
+    </blockquote>
+    <h4 id="-docker-"><code>docker</code></h4>
+    <p>The <code>docker</code> command is where most of the core <code>docker</code> functionality can be accessed. However, outside of the <code>docker images</code> command, it is rarely used directly when working with scarab.</p>
+    <h3 id="-intro-to-docker-compose">• Intro to docker-compose</h3>
+    <p><code>docker-compose</code> is an orchestration tool used by docker for linking multiple docker images together, and inheriting functionality from other docker images without creating a Dockerfile.</p>
+    <p><code>scarab</code> uses docker-compose heavily to allow running microservices and extending the base scarab app.</p>
+    <p><code>docker-compose</code> looks for a file called <code>docker-compose.yml</code>, which is a yaml file with basic overrides and directions for creating docker images.</p>
+    <p>A basic docker-compose file looks something like this:</p>
+    <pre><code class="hljs yaml"><span class="hljs-symbol">
+    scarab:</span>
+    <span class="hljs-symbol">  build:</span> .
+    <span class="hljs-symbol">  env_file:</span> .env
+    <span class="hljs-symbol">  command:</span> npm start
+    </code></pre>
+    <p>The above will build the Dockerfile in the current directory, and will set any variables in the <code>.env</code> file. It will also override the default <code>CMD</code> directive in the Dockerfile with the one specified in <code>command</code>. <code>docker-compose.yml</code> files are very powerful, but scarab also adds some functionality to them to allow us to do more than just orchestrate.</p>
+    <h3 id="-what-scarab-does-differently-than-docker-compose">• what scarab does differently than docker-compose</h3>
+    <p>scarab introduces the ability to merge docker-compose files to create a flat file. This means that your file may define as many apps as it likes, but the <code>scarab</code> field will be provided with defaults. These defaults are inherited recursively from parent apps, until the root scarab compose file is found.</p>
+    <p>The root docker-compose file does most of the definition, and is defined as:</p>
+    <pre><code class="hljs yaml"><span class="hljs-symbol">
+    scarab:</span>
+    <span class="hljs-symbol">  build:</span> .
+    <span class="hljs-symbol">  volumes:</span>
+        - .:<span class="hljs-meta-keyword">/usr/</span>src/app
+    <span class="hljs-symbol">  ports:</span>
+        - <span class="hljs-string">"80:3000"</span>
+    <span class="hljs-symbol">  restart:</span> always
+    <span class="hljs-symbol">  stdin_open:</span> true
+    <span class="hljs-symbol">  tty:</span> true
+    <span class="hljs-symbol">  domainname:</span> socialcode.dev
+    <span class="hljs-symbol">  links:</span>
+        - redis
+    <span class="hljs-symbol">  command:</span> node index.js
+    <span class="hljs-symbol">redis:</span>
+    <span class="hljs-symbol">  image:</span> redis:latest
+    <span class="hljs-symbol">  ports:</span>
+        - <span class="hljs-string">"6379:6379"</span>
+    </code></pre>
+    <p>A child scarab app could then define it&#39;s scarab process as:</p>
+    <pre><code class="hljs yaml"><span class="hljs-symbol">
+    scarab:</span>
+    <span class="hljs-symbol">  command:</span> npm run server
+    <span class="hljs-symbol">  links:</span>
+        - microservice
+    <span class="hljs-symbol">microservice:</span>
+    <span class="hljs-symbol">  image:</span> socialcode/microservice
+    <span class="hljs-symbol">  ports:</span>
+        - <span class="hljs-string">"8080:8080"</span>
+    </code></pre>
+    <p>When running <code>scarab build</code>, <code>scarab start</code>, <code>scarab stop</code>, <code>scarab logs</code>, or <code>scarab compose &lt;command&gt;</code>, the <code>docker-compose.yml</code> file that would be used in the above case would look like this:</p>
+    <pre><code class="hljs yaml"><span class="hljs-symbol">
+    scarab:</span>
+    <span class="hljs-symbol">  build:</span> .
+    <span class="hljs-symbol">  volumes:</span>
+        - .:<span class="hljs-meta-keyword">/usr/</span>src/app
+    <span class="hljs-symbol">  ports:</span>
+        - <span class="hljs-string">"80:3000"</span>
+    <span class="hljs-symbol">  restart:</span> always
+    <span class="hljs-symbol">  stdin_open:</span> true
+    <span class="hljs-symbol">  tty:</span> true
+    <span class="hljs-symbol">  domainname:</span> socialcode.dev
+    <span class="hljs-symbol">  links:</span>
+        - redis
+        - microservice
+    <span class="hljs-symbol">  command:</span> npm run server
+    <span class="hljs-symbol">redis:</span>
+    <span class="hljs-symbol">  image:</span> redis:latest
+    <span class="hljs-symbol">  ports:</span>
+        - <span class="hljs-string">"6379:6379"</span>
+    <span class="hljs-symbol">microservice:</span>
+    <span class="hljs-symbol">  image:</span> socialcode/microservice
+    <span class="hljs-symbol">  ports:</span>
+        - <span class="hljs-string">"8080:8080"</span>
+    </code></pre>
+    <p>This allows us to extend docker-compose files with <code>links</code>, something that is not supported by docker-compose out of the box, but integral to allowing scarab apps to be composeable and modular entities.</p>
+    <blockquote>
+    <p>Because of this, you should never use <code>docker-compose</code> directly with scarab apps. Instead, use <code>scarab compose</code> with the same arguments as you would pass to <code>docker-compose</code>.</p>
+    </blockquote>
+  </section>
+  <hr/>
+  <br/>
+  <br/>
+  <section id="scarab-stack">
+    <h2 id="the-scarab-stack">The Scarab stack</h2>
+    <p>Scarab apps are composeable stacks of applications that inherit their super app&#39;s router and add routes.</p>
+    <p>This lets us create scarab apps that can be mounted inside other scarab apps, or run directly. This modularity lets us create complicated architecture while keeping application code small and modular.</p>
+    <p>Because express makes it easy to create streaming proxies, scarab apps can also be run in parallel and exposed either via routes or ports, and linked using the docker-compose links field.</p>
+    <p>A typical scarab app would look like this:</p>
+    <p><img src="http://oi.pxfx.io/1O2P2e0m2W2O/Image%202016-01-13%20at%2012.04.25%20PM.png" alt="stack"></p>
+    <p>The <code>scarab</code> container runs a <code>scarab</code> application, with your application&#39;s express router mounted inside of it.</p>
+    <p><code>scarab</code> is linked to a separate redis container, which it uses for session control.</p>
+    <p>Your router would then be automatically authenticated, and can communicate with a linked microservice via tcp, running in a separate container.</p>
+    <p>Here&#39;s how a request flows through this architecture:</p>
+    <p><img src="http://oi.pxfx.io/1R322c0P1E2f/Image%202016-01-13%20at%2012.15.40%20PM.png" alt="Request flow"></p>
+    <p>When a user connects to this app, the request is first authenticated by <code>scarab</code>, and redirected to a login page if needed.</p>
+    <p>Scarab sets a <code>bouncer</code> cookie on the request, which is passed to your app. In this example, the app could even be a proxy, pointed to a local django or other application. As long as your app uses cookies to authenticate, you can use scarab as a simple proxy and you will always have a <code>bouncer</code> cookie set on every request you receive.</p>
+    <p>Here&#39;s another example of a larger application:</p>
+    <p><img src="http://oi.pxfx.io/1O10251m1C2c/Image%202016-01-13%20at%2012.14.16%20PM.png" alt="Large app"></p>
+    <p>In this case, the request is still authenticated by scarab, but our application exposes some express routes.</p>
+    <p>At the root, it can serve content directly from our app, via express views. We can either use an express Router, or create an entire express application. As long as the <code>module.exports</code> of <code>index.js</code> is an express app or router, it will be mounted by scarab.</p>
+    <p>under <code>/npm-app</code>, we can serve our own npm module, as long as it acts like connect middleware (in that it handles a req and res) - we&#39;d just use express&#39;s <code>app.use(&#39;/npm-app&#39;, require(&#39;npm-app&#39;))</code> to send it requests directly without a proxy.</p>
+    <p>If we want to serve a linked app, we could create a simple proxy to send authenticated requests to a host and port defined by docker compose by manually creating a simple proxy:</p>
+    <p>If our <code>docker-compose.yml</code> looks like this:</p>
+    <pre><code class="hljs yaml"><span class="hljs-symbol">
+    scarab:</span>
+    <span class="hljs-symbol">  links:</span>
+        - app
+    <span class="hljs-symbol">app:</span>
+    <span class="hljs-symbol">  image:</span> socialcode/simpleapp
+    <span class="hljs-symbol">  ports:</span>
+        - <span class="hljs-string">"8080:8080"</span>
+    </code></pre>
+    <p>Our proxy could look like this:</p>
+    <pre><code class="hljs javascript">
+    scarab.<span class="hljs-keyword">use</span>(<span class="hljs-string">'/app'</span>, (req, res, next) =&gt; {
+      <span class="hljs-keyword">if</span> (!req.user) <span class="hljs-keyword">return</span> next()
+      <span class="hljs-keyword">var</span> url = <span class="hljs-string">'http://'</span> + APP_1_PORT_8080_TCP_ADDR + <span class="hljs-string">':'</span> + APP_1_PORT_8080_TCP_PORT + req.url
+      <span class="hljs-keyword">var</span> j = request.jar()
+      Object.keys(req.cookies).<span class="hljs-keyword">forEach</span>(k =&gt; {
+        <span class="hljs-keyword">var</span> c = req.cookies[k]
+        j.setCookie(k, c)
+      })
+      req.pipe(request({ url: url, jar: j })).pipe(res)
+    })
+    </code></pre>
+    <p>If we then requested <code>/app/my/url</code>, the request would be forwarded to the <code>app</code> service, with the url <code>/my/url</code>.</p>
+  </section>
+  <hr/>
+  <br/>
+  <br/>
+  <section id="routing">
+    <h2 id="scarab-routing">Scarab routing</h2>
+    <h3 id="-express-routing-middleware-concepts">• Express routing/middleware concepts</h3>
+    <p>Express is a simple webserver written in node.js, which is built around the concept of &quot;middleware&quot;.</p>
+    <p>When a request is received, express will run the request through a chain of middleware until one of them does not pass to the next.</p>
+    <p>Each middleware receives 3 arguments:</p>
+    <ul>
+    <li><code>req</code>: an object containing information about the request</li>
+    <li><code>res</code>: an object containing information and exposing mutating functions that you can use to respond to the request</li>
+    <li><code>next</code>: a function that you may call to indicate that you would like to pass this request to the next handler.</li>
+    </ul>
+    <p>When you call <code>require(&#39;scarab&#39;)</code>, the returned object is a preconfigured express app.</p>
+    <p>You can add a simple GET response by calling <code>scarab.get()</code>:</p>
+    <pre><code class="hljs javascript">
+    scarab.get(<span class="hljs-string">'/send-json'</span>, <span class="hljs-function"><span class="hljs-params">(req, res, next)</span> =&gt;</span> {
+      res.json({ success: <span class="hljs-literal">true</span> })
+    })
+    </code></pre>
+    <p>You may add middleware without an HTTP verb by using the <code>.all</code> or <code>.use</code> methods:</p>
+    <pre><code class="hljs javascript">
+    <span class="hljs-comment">// .all, which requires a route, and is an exact match:</span>
+    scarab.all(<span class="hljs-string">'/foo'</span>, (req, res, next) =&gt; {
+      <span class="hljs-comment">// this will only respond to /foo (not /foo/bar)</span>
+      res.render(<span class="hljs-string">'index'</span>, { foo: <span class="hljs-keyword">true</span> })
+    })
+    
+    <span class="hljs-comment">// .use with a route, which will match anything _beginning_ with your route:</span>
+    scarab.<span class="hljs-keyword">use</span>(<span class="hljs-string">'/hello'</span>, (req, res, next) =&gt; {
+      <span class="hljs-comment">// this will respond to /hello, /hello/there, /hello/post/12/comments, etc.</span>
+      res.send(<span class="hljs-string">'hello'</span>)
+    })
+    
+    <span class="hljs-comment">// .use without a route, will match _all_ requests</span>
+    scarab.<span class="hljs-keyword">use</span>((req, res, next) =&gt; {
+      req.middlewareMessage = <span class="hljs-string">'hello from middleware'</span>
+      <span class="hljs-comment">// this will just pass to the next middleware.</span>
+      next()
+    })
+    </code></pre>
+    <p>Express provides lots of helpful response methods and request parsing. For more details, look at the <a href="http://expressjs.com/en/4x/api.html">express documentation</a></p>
+    <h3 id="-self-contained-apps">• Self contained apps</h3>
+    <p>In many cases, you&#39;ll want your app to use templates or may want to do custom express configuration. If your app is only overriding values, you could just manipulate the <code>scarab</code> app, but in some cases you may want to create your own express app, so you can do things like define custom templating engines without breaking the packaged scarab engine.</p>
+    <p>Thankfully, express can mount an express app as if it were a route - so you can create your app like so:</p>
+    <pre><code class="hljs javascript">
+    <span class="hljs-selector-tag">var</span> scarab = module<span class="hljs-selector-class">.exports</span> = require(<span class="hljs-string">'scarab'</span>)
+    <span class="hljs-selector-tag">var</span> express = require(<span class="hljs-string">'express'</span>)
+    <span class="hljs-selector-tag">var</span> app = express()
+    
+    <span class="hljs-comment">/**
+     * Your custom config would go here
+     */</span>
+    
+    scarab.use(<span class="hljs-string">'/'</span>, app)
+    </code></pre>
+    <p>All root requests will now go to app after they have successfully authenticated with scarab.</p>
+    <h3 id="-proxying">• Proxying</h3>
+    <p>If your app isn&#39;t written in node.js, it&#39;s likely that you&#39;ll just use scarab as a proxy.</p>
+    <p>To make this easy, scarab provides a <code>proxy</code> method, which will prepend a proxy route to the beginning of the middleware, mapping a local URL to a remote host.</p>
+    <p>For example:</p>
+    <pre><code class="hljs javascript">
+    <span class="hljs-selector-tag">var</span> scarab = module<span class="hljs-selector-class">.exports</span> = require(<span class="hljs-string">'scarab'</span>)
+    scarab.proxy(<span class="hljs-string">'/api'</span>, <span class="hljs-string">'http://some-api.com/api'</span>)
+    </code></pre>
+    <p>Now all requests to <code>/api</code> will instead be routed to &#39;<a href="http://some-api.com/api">http://some-api.com/api</a>&#39;, along with any sub routes like:</p>
+    <p><code>/api/foo/bar?baz -&gt; http://some-api.com/api/foo/bar?baz</code></p>
+    <p>This will also proxy POST bodies, so you can treat local apis like remote APIs.</p>
+    <p>Under the hood, <code>.proxy</code> sets up an instance of <a href="https://github.com/nodejitsu/node-http-proxy">http-proxy</a>. If you like, you can pass a third argument to <code>.proxy</code> with an options object.</p>
+    <p>The options object is a <a href="https://github.com/nodejitsu/node-http-proxy">http-proxy</a> config object, with a default target of the passed proxy url, and a default changeOrigin of true.</p>
+    <p><strong>Using with docker links</strong></p>
+    <p>A common use case would be to init a scarab app, then add a linked app to your docker-compose.yml file that builds the current directory. Then when scarab starts, proxy to this app.</p>
+    <p>To set up this case, your docker-compose file would look like this:</p>
+    <pre><code class="hljs yaml">
+    scarab:
+      links:
+        -<span class="ruby"> django
+    </span>django:
+      build: .
+      ports:
+        -<span class="ruby"> <span class="hljs-string">"8000:8000"</span>
+    </span>  volumes:
+        -<span class="ruby"> .<span class="hljs-symbol">:/usr/src/app</span></span>
+    </code></pre>
+    <p>And your <code>index.js</code> would look like this:</p>
+    <pre><code class="hljs javascript">
+    <span class="hljs-keyword">var</span> scarab = <span class="hljs-built_in">module</span>.exports = <span class="hljs-built_in">require</span>(<span class="hljs-string">'scarab'</span>)
+    <span class="hljs-keyword">var</span> links = <span class="hljs-built_in">require</span>(<span class="hljs-string">'docker-links'</span>).parseLinks(process.env)
+    
+    <span class="hljs-keyword">var</span> djangoURL = <span class="hljs-string">'http://'</span> + links.django.hostname + <span class="hljs-string">':'</span> + links.django.port
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Proxying requests to django server at <span class="hljs-subst">${djangoURL}</span>`</span>)
+    scarab.proxy(<span class="hljs-string">'/'</span>, djangoURL)
+    
+    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">require</span>.main === <span class="hljs-built_in">module</span>) scarab.serve()
+    </code></pre>
+    <p>In this example, we&#39;re using the <a href="https://www.npmjs.com/package/docker-links">docker-links</a> npm package to parse the environment vars automatically for us.</p>
+    <p>When running, you can tail the logs on the django server by running <code>scarab logs django</code>, and the logs of the proxy by running <code>scarab logs scarab</code>.</p>
+    <p>To see a log for each request proxied, you can set the <code>DEBUG</code> environment to include <code>scarab:proxy</code> (for instance, <code>DEBUG=scarab:*</code> or <code>DEBUG=scarab:proxy</code>).</p>
+  </section>
+  <hr/>
+  <br/>
+  <br/>
+  <section id="extension-apps">
+    <h2 id="scarab-extension-apps">Scarab extension apps</h2>
+    <p>Because every scarab app both inherits and exposes a scarab app, apps can have inheritance chains. This allows you to focus on building your application with a very small scope, and delegating common functionality or toolchain bootstrapping to a parent app.</p>
+    <p>For example, many apps built with scarab will be single page apps, given that our microservices are friendly to them. Instead of inheriting from <code>scarab</code> directly, these apps can inherit from <code>scarab-spa</code>, which includes the authentication layer from scarab, but also adds the following:</p>
+    <ul>
+    <li>a lightweight JSON API for aggregation/communication between the client and external services</li>
+    <li>browserify with babel for client side javascript compilation and module resolution</li>
+    <li>automatic server restarts on changes via nodemon</li>
+    <li>app-specific views and assets directories</li>
+    </ul>
+    <p>Instead of re-creating architecture every time you create a single page app, you can init from this scarab app, and focus on the functionality of your application.</p>
+    <p>Because this architecture is recursive, you could create a scarab-react extension app that added boilerplate and/or best practices to scarab-spa, and further abstract common functionality for future react-based single page apps.</p>
+    <h3 id="-creating-an-extension-app">• Creating an extension app</h3>
+    <p>Extension apps are just scarab apps, so you would init a new app, and modify it to perform the functionality you expect.</p>
+    <p>The only thing scarab needs to know that an app can be extended is a package.json entry called <code>scarab</code> - this allows you to specify what files should be templated over, define sub-app dependencies, and template in common package.json fields.</p>
+    <p>To make your app an extension app, add a <code>scarab</code> field to package.json - the value should be an object, which can contain the following properties:</p>
+    <ul>
+    <li><code>base</code>: the npm-compatible package name (can be a git repo) of the scarab app this app is based on</li>
+    <li><code>copy</code>: An array of files that should be copied to the root directory of the sub-app</li>
+    <li><code>package</code>: Any default package.json fields that sub-apps should contain. For instance, you can define <code>dependencies</code> or <code>devDependencies</code> inside this field.</li>
+    </ul>
+    <p>For example:</p>
+    <pre><code class="hljs json">
+    {
+      <span class="hljs-string">"name"</span>: <span class="hljs-string">"my-extension-app"</span>,
+      // normal package.json stuff
+      <span class="hljs-string">"scarab"</span>: {
+        <span class="hljs-string">"base"</span>: <span class="hljs-string">"jesseditson/scarab-spa"</span>,
+        <span class="hljs-string">"copy"</span>: [
+          <span class="hljs-string">"docker-compose.yml"</span>,
+          <span class="hljs-string">"nodemon.json"</span>,
+          <span class="hljs-string">"Dockerfile"</span>,
+        ],
+        <span class="hljs-string">"package"</span>: {
+          <span class="hljs-string">"scripts"</span>: {
+            <span class="hljs-string">"start"</span>: <span class="hljs-string">"nodemon -L index"</span>,
+          },
+          <span class="hljs-string">"devDependencies"</span>: {
+            <span class="hljs-string">"nodemon"</span>: <span class="hljs-string">"^1.8.1"</span>
+          }
+        }
+      }
+    }
+    </code></pre>
+    <p>The above would copy the local docker-compose.yml, nodemon.json, and Dockerfile when initializing, and add a default start script and dev dependency to the sub-app.</p>
+    <h3 id="-existing-extension-apps">• Existing extension apps</h3>
+    <p><strong>• scarab-spa</strong> (<a href="https://github.com/jesseditson/scarab-spa">Github</a>)</p>
+    <p>This app is a basic scarab app with the following additions:</p>
+    <ul>
+    <li>babel &amp; browserify for building client side scripts</li>
+    <li>sass compilation for building stylesheets</li>
+    <li>automatic reload on save via nodemon</li>
+    <li>npm scripts for starting and bundling your app</li>
+    <li>an example route and API router for building a light API</li>
+    </ul>
+    <p>Scarab-spa can be used by running <code>scarab init jesseditson/scarab-spa</code>.</p>
+  </section>
+  <hr/>
+  <br/>
+  <br/>
+  <section id="workflow">
+    <h2 id="development-workflow">Development workflow</h2>
+    <h3 id="-init-"><code>init</code></h3>
+    <p>Scarab includes a command called <code>init</code>, which handles resolving your parent app and setting up an initial project.</p>
+    <p><code>init</code> takes a single optional argument, which is the npm-compatible package name of the scarab app you would like to extend.</p>
+    <p>For instance, to set up a single page app, you would use:</p>
+    <pre><code class="hljs bash">
+    <span class="hljs-keyword">scarab </span>init <span class="hljs-keyword">jesseditson/scarab-spa</span>
+    </code></pre>
+    <p>This will initialize a basic single page app. Here&#39;s a screen recording of that process:</p>
+    <p><img src="https://camo.githubusercontent.com/41729ab6fa4d8b7a723756d6786c12a06dfccd52/687474703a2f2f6f692e707866782e696f2f317231773343306b325030392f7363617261622d6578616d706c652d3830302e676966" alt="init spa"></p>
+    <p>(a large version of the above can be viewed <a href="http://f.cl.ly/items/0x1f1r3D2m0g0K0X0W0u/Screen%20Recording%202015-12-18%20at%2001.10%20PM.gif">here</a>)</p>
+    <h3 id="-hosts-"><code>hosts</code></h3>
+    <p>running <code>scarab hosts</code> will add the IP of the socialcode docker machine to your /etc/hosts file, so that <a href="http://socialcode.dev">http://socialcode.dev</a> will be pointed to your docker machine. This is especially useful when authenticating against APIs that require access from a specific host. As a result, all whitelists should include this hostname if they are expected to be accessible in development.</p>
+    <p>To remove this host, run <code>scarab hosts remove</code>.</p>
+    <h3 id="-install-"><code>install</code></h3>
+    <p>When installing compiled npm dependencies (like libsass or similar), you&#39;ll need to run <code>npm install</code> on the remote box, or any compiled deps will be compiled for darwin (and as a result, will not run in the docker container).</p>
+    <p>Instead of running <code>npm install</code>, run <code>scarab install</code>, and you will not have this issue. Under the hood, <code>scarab install</code> is just running a <code>scarab</code> service (as defined by your local docker-compose.yml file) with an entrypoint of <code>npm install</code>. Because the volume is mapped, you&#39;ll see your local <code>node_modules</code> folder change.</p>
+    <h3 id="-start-"><code>start</code></h3>
+    <p>Once you have your application set up, run <code>scarab start</code> to start the application. This will start the application in daemonized mode, which means you won&#39;t see any console output, but your app will be available at <a href="http://socialcode.dev">http://socialcode.dev</a> (assuming you have run <code>scarab hosts</code>).</p>
+    <h3 id="-stop-"><code>stop</code></h3>
+    <p>You can stop your application by running <code>scarab stop</code>. If you&#39;re unsure if your app is running, you can either just run <code>stop</code>, or run <code>scarab compose ps</code> to see what services are running on the <code>socialcode</code> docker machine.</p>
+    <h3 id="-logs-"><code>logs</code></h3>
+    <p>While your app is running, you can tail the logs by running <code>scarab logs</code>.</p>
+    <blockquote>
+    <p>Note that docker sometimes disconnects with the message:</p>
+    <pre><code>ERROR: Couldn<span class="hljs-symbol">'t</span> connect <span class="hljs-keyword">to</span> Docker daemon - you might need <span class="hljs-keyword">to</span> run `docker-machine start <span class="hljs-keyword">default</span>`.
+    </code></pre><p>This unfortunately is a known issue with docker, and prevents us from running apps in the foreground. Once docker-compose has resolved this issue, these docs will be updated.
+    When you encounter this, you can just restart logging by running <code>scarab logs</code>.</p>
+    </blockquote>
+    <p>To tail the logs of a service other than <code>scarab</code>, run <code>scarab logs &lt;service&gt;</code>. For example if you&#39;re just using scarab as a proxy and your app is running under the service name <code>go</code> (as defined in your docker-compose.yml file), you&#39;d tail the go logs by running <code>scarab logs go</code>.</p>
+    <p>To tail the logs of <em>all</em> services, run <code>scarab compose logs</code>. This is equivalent to running <code>docker-compose logs</code>. This is usually not preferable, as the logs do not have a limit (<a href="https://github.com/docker/compose/issues/265">https://github.com/docker/compose/issues/265</a>), and can disconnect randomly (<a href="https://github.com/docker/compose/issues/2338#issuecomment-158202641">https://github.com/docker/compose/issues/2338#issuecomment-158202641</a>).</p>
+    <h3 id="-cleanup-"><code>cleanup</code></h3>
+    <p>Docker leaves lots of artifacts on the VM when building apps. It&#39;s a good idea to clean these up occasionally, and so <code>scarab</code> comes with a command that removes unused artifacts, <code>scarab clean</code>. If you run in to odd behavior when starting images, it&#39;s possible that you&#39;re running low on VM space, so this command combined with <code>docker-machine restart socialcode</code> will usually resolve most issues.</p>
+    <h3 id="-compose-"><code>compose</code></h3>
+    <p><code>docker-compose</code> has a multitude of other commands that you can use to inspect or manipulate your services. Because of the way docker-compose.yml files are inherited by scarab apps, you&#39;ll use <code>scarab compose</code> instead of <code>docker-compose</code> whenever performing a compose command.</p>
+  </section>
+  <hr/>
+  <br/>
+  <br/>
+
+  </div><!--/container-->
+  <script src="js/bundle.js"></script>
+</body>
+</html>
