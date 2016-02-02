@@ -22,7 +22,8 @@
 <p><code>scarab</code> uses docker-compose heavily to allow running microservices and extending the base scarab app.</p>
 <p><code>docker-compose</code> looks for a file called <code>docker-compose.yml</code>, which is a yaml file with basic overrides and directions for creating docker images.</p>
 <p>A basic docker-compose file looks something like this:</p>
-<pre><code class="lang-yaml"><span class="hljs-symbol">scarab:</span>
+<pre><code class="hljs yaml"><span class="hljs-symbol">
+scarab:</span>
 <span class="hljs-symbol">  build:</span> .
 <span class="hljs-symbol">  env_file:</span> .env
 <span class="hljs-symbol">  command:</span> npm start
@@ -31,7 +32,7 @@
 <h3 id="-what-scarab-does-differently-than-docker-compose">• what scarab does differently than docker-compose</h3>
 <p>scarab introduces the ability to merge docker-compose files to create a flat file. This means that your file may define as many apps as it likes, but the <code>scarab</code> field will be provided with defaults. These defaults are inherited recursively from parent apps, until the root scarab compose file is found.</p>
 <p>The root docker-compose file does most of the definition, and is defined as:</p>
-<pre><code class="lang-yaml"><span class="hljs-symbol">
+<pre><code class="hljs yaml"><span class="hljs-symbol">
 scarab:</span>
 <span class="hljs-symbol">  build:</span> .
 <span class="hljs-symbol">  volumes:</span>
@@ -51,7 +52,7 @@ scarab:</span>
     - <span class="hljs-string">"6379:6379"</span>
 </code></pre>
 <p>A child scarab app could then define it&#39;s scarab process as:</p>
-<pre><code class="lang-yaml"><span class="hljs-symbol">
+<pre><code class="hljs yaml"><span class="hljs-symbol">
 scarab:</span>
 <span class="hljs-symbol">  command:</span> npm run server
 <span class="hljs-symbol">  links:</span>
@@ -62,7 +63,7 @@ scarab:</span>
     - <span class="hljs-string">"8080:8080"</span>
 </code></pre>
 <p>When running <code>scarab build</code>, <code>scarab start</code>, <code>scarab stop</code>, <code>scarab logs</code>, or <code>scarab compose &lt;command&gt;</code>, the <code>docker-compose.yml</code> file that would be used in the above case would look like this:</p>
-<pre><code class="lang-yaml"><span class="hljs-symbol">
+<pre><code class="hljs yaml"><span class="hljs-symbol">
 scarab:</span>
 <span class="hljs-symbol">  build:</span> .
 <span class="hljs-symbol">  volumes:</span>

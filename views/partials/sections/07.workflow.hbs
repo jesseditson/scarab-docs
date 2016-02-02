@@ -3,12 +3,18 @@
 <p>Scarab includes a command called <code>init</code>, which handles resolving your parent app and setting up an initial project.</p>
 <p><code>init</code> takes a single optional argument, which is the npm-compatible package name of the scarab app you would like to extend.</p>
 <p>For instance, to set up a single page app, you would use:</p>
-<pre><code class="lang-bash">
+<pre><code class="hljs bash">
 <span class="hljs-keyword">scarab </span>init <span class="hljs-keyword">jesseditson/scarab-spa</span>
 </code></pre>
 <p>This will initialize a basic single page app. Here&#39;s a screen recording of that process:</p>
 <p><img src="https://camo.githubusercontent.com/41729ab6fa4d8b7a723756d6786c12a06dfccd52/687474703a2f2f6f692e707866782e696f2f317231773343306b325030392f7363617261622d6578616d706c652d3830302e676966" alt="init spa"></p>
 <p>(a large version of the above can be viewed <a href="http://f.cl.ly/items/0x1f1r3D2m0g0K0X0W0u/Screen%20Recording%202015-12-18%20at%2001.10%20PM.gif">here</a>)</p>
+<h3 id="-hosts-"><code>hosts</code></h3>
+<p>running <code>scarab hosts</code> will add the IP of the socialcode docker machine to your /etc/hosts file, so that <a href="http://socialcode.dev">http://socialcode.dev</a> will be pointed to your docker machine. This is especially useful when authenticating against APIs that require access from a specific host. As a result, all whitelists should include this hostname if they are expected to be accessible in development.</p>
+<p>To remove this host, run <code>scarab hosts remove</code>.</p>
+<h3 id="-install-"><code>install</code></h3>
+<p>When installing compiled npm dependencies (like libsass or similar), you&#39;ll need to run <code>npm install</code> on the remote box, or any compiled deps will be compiled for darwin (and as a result, will not run in the docker container).</p>
+<p>Instead of running <code>npm install</code>, run <code>scarab install</code>, and you will not have this issue. Under the hood, <code>scarab install</code> is just running a <code>scarab</code> service (as defined by your local docker-compose.yml file) with an entrypoint of <code>npm install</code>. Because the volume is mapped, you&#39;ll see your local <code>node_modules</code> folder change.</p>
 <h3 id="-start-"><code>start</code></h3>
 <p>Once you have your application set up, run <code>scarab start</code> to start the application. This will start the application in daemonized mode, which means you won&#39;t see any console output, but your app will be available at <a href="http://socialcode.dev">http://socialcode.dev</a> (assuming you have run <code>scarab hosts</code>).</p>
 <h3 id="-stop-"><code>stop</code></h3>
@@ -21,6 +27,8 @@
 </code></pre><p>This unfortunately is a known issue with docker, and prevents us from running apps in the foreground. Once docker-compose has resolved this issue, these docs will be updated.
 When you encounter this, you can just restart logging by running <code>scarab logs</code>.</p>
 </blockquote>
+<p>To tail the logs of a service other than <code>scarab</code>, run <code>scarab logs &lt;service&gt;</code>. For example if you&#39;re just using scarab as a proxy and your app is running under the service name <code>go</code> (as defined in your docker-compose.yml file), you&#39;d tail the go logs by running <code>scarab logs go</code>.</p>
+<p>To tail the logs of <em>all</em> services, run <code>scarab compose logs</code>. This is equivalent to running <code>docker-compose logs</code>. This is usually not preferable, as the logs do not have a limit (<a href="https://github.com/docker/compose/issues/265">https://github.com/docker/compose/issues/265</a>), and can disconnect randomly (<a href="https://github.com/docker/compose/issues/2338#issuecomment-158202641">https://github.com/docker/compose/issues/2338#issuecomment-158202641</a>).</p>
 <h3 id="-cleanup-"><code>cleanup</code></h3>
 <p>Docker leaves lots of artifacts on the VM when building apps. It&#39;s a good idea to clean these up occasionally, and so <code>scarab</code> comes with a command that removes unused artifacts, <code>scarab clean</code>. If you run in to odd behavior when starting images, it&#39;s possible that you&#39;re running low on VM space, so this command combined with <code>docker-machine restart socialcode</code> will usually resolve most issues.</p>
 <h3 id="-compose-"><code>compose</code></h3>

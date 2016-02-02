@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "express": "^4.13.4",
     "fs-readdir-recursive": "^1.0.0",
     "handlebars": "^4.0.5",
     "scarab-spa": "jesseditson/scarab-spa"
@@ -10,7 +11,7 @@
   "scripts": {
     "start": "npm run bundle-css && npm run bundle-js & npm run watch-markdown & nodemon -L index",
     "bundle-js": "mkdir -p dist/js && watchify public/js/main.js --debug --poll -o dist/js/bundle.js",
-    "bundle-css": "node-sass --include-path public/css public/css/main.scss dist/css/bundle.css",
+    "bundle-css": "node-sass --include-path public/css --include-path node_modules public/css/main.scss dist/css/bundle.css",
     "generate-views": "node scripts/generate-views",
     "watch-markdown": "onchange 'markdown/**/*.md' -v -- npm run generate-views",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -37,5 +38,5 @@
   "description": "Scarab documentation site",
   "main": "index.js",
   "author": "Jesse Ditson <jesse.ditson@socialcodeinc.com>",
-  "license": "ISC"
+  "private": true
 }

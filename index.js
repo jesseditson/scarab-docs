@@ -1,4 +1,5 @@
 var exphbs  = require('express-handlebars')
+var express = require('express')
 var scarab = module.exports = require('scarab-spa')
 
 var fs = require('fs')
@@ -17,6 +18,8 @@ var sections = scarab.locals.sections = fs.readdirSync(sectionDir)
       link: link
     }
   })
+
+scarab.use('/', express.static(__dirname + '/node_modules'))
 
 /**
  * To attach a simple route to the application,

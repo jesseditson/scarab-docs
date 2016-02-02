@@ -18,7 +18,7 @@
 <p>under <code>/npm-app</code>, we can serve our own npm module, as long as it acts like connect middleware (in that it handles a req and res) - we&#39;d just use express&#39;s <code>app.use(&#39;/npm-app&#39;, require(&#39;npm-app&#39;))</code> to send it requests directly without a proxy.</p>
 <p>If we want to serve a linked app, we could create a simple proxy to send authenticated requests to a host and port defined by docker compose by manually creating a simple proxy:</p>
 <p>If our <code>docker-compose.yml</code> looks like this:</p>
-<pre><code class="lang-yaml"><span class="hljs-symbol">
+<pre><code class="hljs yaml"><span class="hljs-symbol">
 scarab:</span>
 <span class="hljs-symbol">  links:</span>
     - app
@@ -28,7 +28,7 @@ scarab:</span>
     - <span class="hljs-string">"8080:8080"</span>
 </code></pre>
 <p>Our proxy could look like this:</p>
-<pre><code class="lang-javascript">
+<pre><code class="hljs javascript">
 scarab.<span class="hljs-keyword">use</span>(<span class="hljs-string">'/app'</span>, (req, res, next) =&gt; {
   <span class="hljs-keyword">if</span> (!req.user) <span class="hljs-keyword">return</span> next()
   <span class="hljs-keyword">var</span> url = <span class="hljs-string">'http://'</span> + APP_1_PORT_8080_TCP_ADDR + <span class="hljs-string">':'</span> + APP_1_PORT_8080_TCP_PORT + req.url

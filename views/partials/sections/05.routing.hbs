@@ -10,13 +10,13 @@
 </ul>
 <p>When you call <code>require(&#39;scarab&#39;)</code>, the returned object is a preconfigured express app.</p>
 <p>You can add a simple GET response by calling <code>scarab.get()</code>:</p>
-<pre><code class="lang-javascript">
+<pre><code class="hljs javascript">
 scarab.get(<span class="hljs-string">'/send-json'</span>, <span class="hljs-function"><span class="hljs-params">(req, res, next)</span> =&gt;</span> {
   res.json({ success: <span class="hljs-literal">true</span> })
 })
 </code></pre>
 <p>You may add middleware without an HTTP verb by using the <code>.all</code> or <code>.use</code> methods:</p>
-<pre><code class="lang-javascript">
+<pre><code class="hljs javascript">
 <span class="hljs-comment">// .all, which requires a route, and is an exact match:</span>
 scarab.all(<span class="hljs-string">'/foo'</span>, (req, res, next) =&gt; {
   <span class="hljs-comment">// this will only respond to /foo (not /foo/bar)</span>
@@ -40,7 +40,7 @@ scarab.<span class="hljs-keyword">use</span>((req, res, next) =&gt; {
 <h3 id="-self-contained-apps">• Self contained apps</h3>
 <p>In many cases, you&#39;ll want your app to use templates or may want to do custom express configuration. If your app is only overriding values, you could just manipulate the <code>scarab</code> app, but in some cases you may want to create your own express app, so you can do things like define custom templating engines without breaking the packaged scarab engine.</p>
 <p>Thankfully, express can mount an express app as if it were a route - so you can create your app like so:</p>
-<pre><code class="lang-javascript">
+<pre><code class="hljs javascript">
 <span class="hljs-selector-tag">var</span> scarab = module<span class="hljs-selector-class">.exports</span> = require(<span class="hljs-string">'scarab'</span>)
 <span class="hljs-selector-tag">var</span> express = require(<span class="hljs-string">'express'</span>)
 <span class="hljs-selector-tag">var</span> app = express()
@@ -52,3 +52,44 @@ scarab.<span class="hljs-keyword">use</span>((req, res, next) =&gt; {
 scarab.use(<span class="hljs-string">'/'</span>, app)
 </code></pre>
 <p>All root requests will now go to app after they have successfully authenticated with scarab.</p>
+<h3 id="-proxying">• Proxying</h3>
+<p>If your app isn&#39;t written in node.js, it&#39;s likely that you&#39;ll just use scarab as a proxy.</p>
+<p>To make this easy, scarab provides a <code>proxy</code> method, which will prepend a proxy route to the beginning of the middleware, mapping a local URL to a remote host.</p>
+<p>For example:</p>
+<pre><code class="hljs javascript">
+<span class="hljs-selector-tag">var</span> scarab = module<span class="hljs-selector-class">.exports</span> = require(<span class="hljs-string">'scarab'</span>)
+scarab.proxy(<span class="hljs-string">'/api'</span>, <span class="hljs-string">'http://some-api.com/api'</span>)
+</code></pre>
+<p>Now all requests to <code>/api</code> will instead be routed to &#39;<a href="http://some-api.com/api">http://some-api.com/api</a>&#39;, along with any sub routes like:</p>
+<p><code>/api/foo/bar?baz -&gt; http://some-api.com/api/foo/bar?baz</code></p>
+<p>This will also proxy POST bodies, so you can treat local apis like remote APIs.</p>
+<p>Under the hood, <code>.proxy</code> sets up an instance of <a href="https://github.com/nodejitsu/node-http-proxy">http-proxy</a>. If you like, you can pass a third argument to <code>.proxy</code> with an options object.</p>
+<p>The options object is a <a href="https://github.com/nodejitsu/node-http-proxy">http-proxy</a> config object, with a default target of the passed proxy url, and a default changeOrigin of true.</p>
+<p><strong>Using with docker links</strong></p>
+<p>A common use case would be to init a scarab app, then add a linked app to your docker-compose.yml file that builds the current directory. Then when scarab starts, proxy to this app.</p>
+<p>To set up this case, your docker-compose file would look like this:</p>
+<pre><code class="hljs yaml">
+scarab:
+  links:
+    -<span class="ruby"> django
+</span>django:
+  build: .
+  ports:
+    -<span class="ruby"> <span class="hljs-string">"8000:8000"</span>
+</span>  volumes:
+    -<span class="ruby"> .<span class="hljs-symbol">:/usr/src/app</span></span>
+</code></pre>
+<p>And your <code>index.js</code> would look like this:</p>
+<pre><code class="hljs javascript">
+<span class="hljs-keyword">var</span> scarab = <span class="hljs-built_in">module</span>.exports = <span class="hljs-built_in">require</span>(<span class="hljs-string">'scarab'</span>)
+<span class="hljs-keyword">var</span> links = <span class="hljs-built_in">require</span>(<span class="hljs-string">'docker-links'</span>).parseLinks(process.env)
+
+<span class="hljs-keyword">var</span> djangoURL = <span class="hljs-string">'http://'</span> + links.django.hostname + <span class="hljs-string">':'</span> + links.django.port
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Proxying requests to django server at <span class="hljs-subst">${djangoURL}</span>`</span>)
+scarab.proxy(<span class="hljs-string">'/'</span>, djangoURL)
+
+<span class="hljs-keyword">if</span> (<span class="hljs-built_in">require</span>.main === <span class="hljs-built_in">module</span>) scarab.serve()
+</code></pre>
+<p>In this example, we&#39;re using the <a href="https://www.npmjs.com/package/docker-links">docker-links</a> npm package to parse the environment vars automatically for us.</p>
+<p>When running, you can tail the logs on the django server by running <code>scarab logs django</code>, and the logs of the proxy by running <code>scarab logs scarab</code>.</p>
+<p>To see a log for each request proxied, you can set the <code>DEBUG</code> environment to include <code>scarab:proxy</code> (for instance, <code>DEBUG=scarab:*</code> or <code>DEBUG=scarab:proxy</code>).</p>

@@ -19,7 +19,7 @@
 <li><code>package</code>: Any default package.json fields that sub-apps should contain. For instance, you can define <code>dependencies</code> or <code>devDependencies</code> inside this field.</li>
 </ul>
 <p>For example:</p>
-<pre><code class="lang-json">
+<pre><code class="hljs json">
 {
   <span class="hljs-string">"name"</span>: <span class="hljs-string">"my-extension-app"</span>,
   // normal package.json stuff
@@ -42,3 +42,14 @@
 }
 </code></pre>
 <p>The above would copy the local docker-compose.yml, nodemon.json, and Dockerfile when initializing, and add a default start script and dev dependency to the sub-app.</p>
+<h3 id="-existing-extension-apps">• Existing extension apps</h3>
+<p><strong>• scarab-spa</strong> (<a href="https://github.com/jesseditson/scarab-spa">Github</a>)</p>
+<p>This app is a basic scarab app with the following additions:</p>
+<ul>
+<li>babel &amp; browserify for building client side scripts</li>
+<li>sass compilation for building stylesheets</li>
+<li>automatic reload on save via nodemon</li>
+<li>npm scripts for starting and bundling your app</li>
+<li>an example route and API router for building a light API</li>
+</ul>
+<p>Scarab-spa can be used by running <code>scarab init jesseditson/scarab-spa</code>.</p>
